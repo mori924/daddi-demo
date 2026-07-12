@@ -242,6 +242,35 @@
 .partner-box .pb-name { font-weight: 700; }
 .partner-box li { margin-left: 20px; color: var(--ink-2); }
 
+/* ---------- 問い合わせメール ---------- */
+.mail-box {
+  background: var(--surface); border: 1px solid var(--hairline);
+  border-radius: 12px; margin-top: 10px; overflow: hidden;
+}
+.mail-row {
+  display: flex; gap: 10px; align-items: baseline;
+  padding: 9px 14px; border-bottom: 1px solid var(--hairline);
+  font-size: 13px; font-weight: 600;
+}
+.mail-label {
+  flex-shrink: 0; width: 38px; font-size: 11px; font-weight: 700;
+  color: var(--muted); letter-spacing: 0.05em;
+}
+.mail-body {
+  padding: 12px 14px; font-size: 13px; line-height: 1.8;
+  white-space: pre-line; color: var(--ink-2);
+  border-bottom: 1px dashed var(--hairline);
+  max-height: 240px; overflow-y: auto;
+}
+.mail-actions { padding: 12px 14px; }
+.mail-send {
+  font-size: 14px; font-weight: 700; color: #fff;
+  background: var(--brand-green); border: none; border-radius: 999px;
+  padding: 10px 22px; cursor: pointer;
+}
+.mail-send:hover { background: #337d3b; }
+.mail-send:disabled { opacity: 0.75; cursor: default; }
+
 /* ---------- input ---------- */
 #input-bar {
   display: flex; gap: 10px; align-items: center;
@@ -2211,6 +2240,108 @@ function suggestHTML(items) {
     `<button class="suggest-btn" data-q="${esc(t)}">${esc(t)}</button>`).join("") + `</div>`;
 }
 
+/* ---------------- 遊休設備マーケット(デモ用カタログ) ---------------- */
+const EQUIPMENT = [
+  { re: /マシニング/, name: "立形マシニングセンタ", spec: "テーブル600×400 / BT40 / 2018年式",
+    sellers: [
+      { company: "北斗機工株式会社", person: "設備管理部 田中様", email: "equip@hokuto-kiko.co.jp",
+        cond: "稼働約9,000h・年次点検済", price: 4800000, note: "生産ライン再編により売却希望" },
+      { company: "ミナト精密工業", person: "総務部 川島様", email: "soumu@minato-seimitsu.jp",
+        cond: "稼働約14,000h・主軸オーバーホール済", price: 3200000, note: "工場移転のため" }]},
+  { re: /レーザー/, name: "ファイバーレーザー加工機", spec: "4kW / 3.0×1.5m / 2020年式",
+    sellers: [
+      { company: "富士川メカトロ株式会社", person: "工場長 井上様", email: "factory@fujikawa-mecha.co.jp",
+        cond: "稼働約6,000h・レンズ交換済", price: 12500000, note: "高出力機への更新のため" }]},
+  { re: /ベンダー|プレスブレーキ|曲げ機/, name: "プレスブレーキ(ベンダー)", spec: "80t / 2.5m / 2016年式",
+    sellers: [
+      { company: "北斗機工株式会社", person: "設備管理部 田中様", email: "equip@hokuto-kiko.co.jp",
+        cond: "金型一式付・精度点検済", price: 2600000, note: "板金部門縮小のため" }]},
+  { re: /旋盤/, name: "NC旋盤", spec: "8インチチャック / 2019年式",
+    sellers: [
+      { company: "ミナト精密工業", person: "総務部 川島様", email: "soumu@minato-seimitsu.jp",
+        cond: "稼働約7,500h・刃物台交換済", price: 5400000, note: "設備統合のため" }]},
+  { re: /三次元測定|測定機/, name: "CNC三次元測定機", spec: "測定範囲700×1000×600 / 2021年式",
+    sellers: [
+      { company: "サクラ電装株式会社", person: "品質保証部 大野様", email: "qa@sakura-denso.co.jp",
+        cond: "校正証明書付・恒温室使用", price: 6800000, note: "検査体制の外注化のため" }]},
+];
+
+function mailBody(eq, seller) {
+  return `${seller.company} ${seller.person}
+
+お世話になっております。DADDi DEMO WORKS 製造部です。
+DADDi経由で貴社保有の「${eq.name}」(${eq.spec})の売却情報を拝見し、
+購入を検討しております。下記についてご教示ください。
+
+1. 現物見学の可否 (希望: 今月中)
+2. 保守記録・稼働時間の詳細
+3. 搬出・輸送条件と最終お見積もり
+
+お忙しいところ恐れ入りますが、よろしくお願いいたします。`;
+}
+
+function replyEquipment(b, eq) {
+  const boxes = eq.sellers.map((s) => `
+    <div class="partner-box"><div class="pb-name">${esc(s.company)} <span class="chip">保有確認済</span></div>
+    <ul><li>設備: ${esc(eq.name)} (${esc(eq.spec)})</li>
+    <li>状態: ${esc(s.cond)} ／ 売却理由: ${esc(s.note)}</li>
+    <li>希望価格: ${yen(s.price)}</li>
+    <li>窓口: ${esc(s.person)} (${esc(s.email)})</li></ul></div>`).join("");
+  const n = eq.sellers.length;
+  b.innerHTML = `「${esc(eq.name)}」ですね。<span class="phase-badge">フェーズ2 プレビュー — 遊休設備マーケット(構想)</span>
+提携ネットワーク内に<b>保有企業が${n}社</b>見つかりました。新品導入より早く・安く調達できる可能性があります:
+${boxes}
+問い合わせメールを用意しました。内容を確認して、そのまま一括送信できます:
+<div class="mail-box">
+  <div class="mail-row"><span class="mail-label">宛先</span>${eq.sellers.map((s) => esc(s.email)).join("、 ")}</div>
+  <div class="mail-row"><span class="mail-label">件名</span>【購入検討】${esc(eq.name)}の見学・見積もり依頼 (DADDi経由)</div>
+  <div class="mail-body">${esc(mailBody(eq, eq.sellers[0]))}</div>
+  <div class="sub" style="padding:8px 14px 0">※各社の担当者名・設備情報は自動で差し替えて送信されます。</div>
+  <div class="mail-actions"><button class="mail-send" id="btn-mail-send">📧 ${n}社に一括送信</button></div>
+  <div class="steps" id="mail-status" style="padding:0 14px 12px"></div>
+</div>
+<div class="sub" style="margin-top:8px">※デモ用の架空データです。実装ではメールAPI連携で送信し、返信もこのチャットに届きます。</div>`;
+  scrollDown();
+  const btn = b.querySelector("#btn-mail-send");
+  const status = b.querySelector("#mail-status");
+  btn.addEventListener("click", async () => {
+    btn.disabled = true; btn.textContent = "送信中…";
+    for (const s of eq.sellers) {
+      const d = document.createElement("div");
+      d.className = "doing"; d.textContent = `${s.company} (${s.email}) へ送信中`;
+      status.appendChild(d); scrollDown();
+      await sleep(700);
+      d.className = "done"; d.textContent = `${s.company} へ送信済み`;
+    }
+    btn.textContent = `✔ ${n}社に送信しました`;
+    addAI(`${n}社への問い合わせを送信しました。返信が届き次第、このチャットでお知らせします。
+<div class="sub">送信履歴は調達台帳に記録され、価格交渉の実績データとして蓄積されます。</div>`);
+    await sleep(3500);
+    const s0 = eq.sellers[0];
+    addAI(`🔔 <b>${esc(s0.company)}から返信が届きました</b> (2分前)
+「お問い合わせありがとうございます。現物見学は今週金曜14時以降であれば対応可能です。保守記録一式もご用意しておきます。——${esc(s0.person.replace("様", ""))}」` +
+      suggestHTML(["金曜14時で見学を予約して", "他の設備も探したい"]));
+  });
+  if (new URLSearchParams(location.search).get("autosend")) btn.click();
+}
+
+function replyVisit(b) {
+  b.innerHTML = `見学予約のリクエストを送信しました。
+<div class="check-list"><div class="check-item check-good"><div class="ci-icon">📅</div>
+<div><span class="ci-title">工場見学 — 北斗機工株式会社</span><span class="ci-level">仮登録</span>
+<div class="ci-detail">今週金曜 14:00〜15:00 ／ 立形マシニングセンタ現物確認 ／ 先方窓口: 設備管理部 田中様</div></div></div></div>
+確定したらカレンダーに本登録し、前日にリマインドします。
+<div class="sub" style="margin-top:6px">※デモ演出です。実装ではカレンダーAPI連携を想定。</div>`;
+  scrollDown();
+}
+
+function replyEquipmentAsk(b) {
+  b.innerHTML = `どの設備をお探しですか？現在、提携ネットワークで保有情報が確認できているのはこちらです:` +
+    suggestHTML(["中古のマシニングセンタがほしい", "レーザー加工機を導入したい",
+      "プレスブレーキを探してる", "三次元測定機がほしい"]);
+  scrollDown();
+}
+
 /* ================================================================
    応答ルーティング
    ================================================================ */
@@ -2227,8 +2358,16 @@ async function respond(q) {
   const wantDevelop = /(開発|作り|造り|試作)(したい|たい)/.test(q);
   const wantInnovation = /イノベーション|新規事業|新製品|新しい事業|共同開発|コラボ/.test(q);
 
+  // 設備調達インテント(図面・部品の話でなければ)
+  const wantBuy = /(ほしい|欲しい|買いたい|購入|導入した?い?|探して|探したい)/.test(q);
+  const eqMatch = EQUIPMENT.find((e) => e.re.test(q));
+  const isDrawingContext = /図面|部品/.test(q);
+
   if (wantAll) return replyAll(b);
   if (wantInnovation) return replyInnovation(b);
+  if (/見学.*予約|予約して/.test(q)) return replyVisit(b);
+  if (!isDrawingContext && eqMatch && wantBuy) return replyEquipment(b, eqMatch);
+  if (!isDrawingContext && !eqMatch && wantBuy && /機材|設備|機械|装置/.test(q)) return replyEquipmentAsk(b);
   if (wantDevelop && /デスク|机/.test(q)) return replyDesk(b);
   if (refPart && wantEstimate) return replyEstimate(b, refPart);
   if (refPart && wantCheck) return replyCheck(b, refPart);
@@ -2499,7 +2638,7 @@ function welcome() {
 <div class="sub">🔒 データは御社専用領域に保存され、外部と共有されることはありません。</div>` +
     suggestHTML(["SUS304の曲げブラケットの過去図面ある？", "φ20 h7の駆動シャフト",
       "不具合ナレッジを見せて", "昇降式デスクを開発したい", "イノベーションを起こしたい",
-      "図面台帳をすべて見る", "📎 新規図面のAI読取りを試す"]));
+      "中古のマシニングセンタがほしい", "図面台帳をすべて見る", "📎 新規図面のAI読取りを試す"]));
 }
 
 function send() {
