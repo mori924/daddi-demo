@@ -2225,8 +2225,10 @@ async function respond(q) {
   const wantKnowledge = /不具合|トラブル|ナレッジ|失敗/.test(q) && !refPart;
   const wantAll = /(一覧|台帳|全部|すべて|全て).*(見|表示|出)|図面台帳/.test(q);
   const wantDevelop = /(開発|作り|造り|試作)(したい|たい)/.test(q);
+  const wantInnovation = /イノベーション|新規事業|新製品|新しい事業|共同開発|コラボ/.test(q);
 
   if (wantAll) return replyAll(b);
+  if (wantInnovation) return replyInnovation(b);
   if (wantDevelop && /デスク|机/.test(q)) return replyDesk(b);
   if (refPart && wantEstimate) return replyEstimate(b, refPart);
   if (refPart && wantCheck) return replyCheck(b, refPart);
@@ -2311,6 +2313,39 @@ function replyAll(b) {
       cardsHTML(list.map((p) => cardHTML(p)), true);
   }
   b.innerHTML = html;
+  scrollDown();
+}
+
+function replyInnovation(b) {
+  // 台帳データから自社の強みを実数で分析
+  const sensor = REG.filter((p) => (p.tags || []).includes("センサ")).length;
+  const sheet = REG.filter((p) => p.processes.includes("曲げ")).length;
+  const turning = REG.filter((p) => p.processes.some((x) => x.includes("旋盤"))).length;
+  const machining = REG.filter((p) => p.processes.some((x) => x.includes("マシニング"))).length;
+  const customers = [...new Set(REG.map((p) => p.customer))].length;
+  b.innerHTML = `イノベーションのご相談ですね。まず御社の<b>蓄積データから強みを分析</b>しました:
+<table class="meta-table">
+<tr><th>センサ関連部品</th><td>${sensor}枚 — 筐体・取付部品の一貫した設計製作ノウハウ</td></tr>
+<tr><th>板金加工(曲げ)</th><td>${sheet}枚 — 薄板〜t4.5の曲げ実績、SUS曲げの不具合対策ナレッジ保有</td></tr>
+<tr><th>精密切削</th><td>旋盤${turning}枚 / マシニング${machining}枚 — h7公差・圧入部の量産実績</td></tr>
+<tr><th>取引実績</th><td>${customers}社 — 多品種小ロットの見積もりデータ蓄積</td></tr>
+</table>
+<span class="phase-badge">フェーズ2 プレビュー — 業界データマーケット(構想)</span>
+この強みと<b>補完関係</b>にある企業を、共同開発のマッチング候補として提案します:
+<div class="partner-box"><div class="pb-name">A社: 東和ロボティクス株式会社 <span class="chip">既存顧客</span></div>
+<ul><li>提案テーマ: 協働ロボット用センサユニットの共同開発</li>
+<li>相性: 御社のセンサ筐体加工実績(${sensor}件) × 同社の駆動機構設計</li>
+<li>入口: 既存取引(モータブラケット・シャフト)からの拡大提案</li></ul></div>
+<div class="partner-box"><div class="pb-name">B社: サクラ電装株式会社 <span class="chip">既存顧客</span></div>
+<ul><li>提案テーマ: 車載センサモジュール筐体の開発受託</li>
+<li>相性: 御社の防水ハウジング製作実績 × 同社の電装設計</li></ul></div>
+<div class="partner-box"><div class="pb-name">C社: 有限会社ヤマダ・エンジニアリング <span class="chip">データ提供パートナー</span></div>
+<ul><li>提案テーマ: 昇降機構ユニットへの精密部品供給</li>
+<li>連絡先: 山田 太郎 (yamada@yamada-eng.com / 03-1234-5678)</li>
+<li>参考: 同社提供の図面一式は ¥50,000 で購入可能(電子データ)</li></ul></div>
+各社への商談準備資料(御社の関連実績まとめ)も、台帳データから自動生成できます。どの提案を深掘りしますか？
+<div class="sub" style="margin-top:8px">※デモ用の架空データです。マッチングは匿名化された特徴データに基づき、双方の同意後に開示される設計です。</div>` +
+    suggestHTML(["センサ関連の図面を見せて", "昇降式デスクを開発したい"]);
   scrollDown();
 }
 
@@ -2463,8 +2498,8 @@ function welcome() {
 ・図面のAI読取り — 📎からアップロード
 <div class="sub">🔒 データは御社専用領域に保存され、外部と共有されることはありません。</div>` +
     suggestHTML(["SUS304の曲げブラケットの過去図面ある？", "φ20 h7の駆動シャフト",
-      "不具合ナレッジを見せて", "昇降式デスクを開発したい", "図面台帳をすべて見る",
-      "📎 新規図面のAI読取りを試す"]));
+      "不具合ナレッジを見せて", "昇降式デスクを開発したい", "イノベーションを起こしたい",
+      "図面台帳をすべて見る", "📎 新規図面のAI読取りを試す"]));
 }
 
 function send() {
